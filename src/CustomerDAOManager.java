@@ -1,131 +1,104 @@
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Scanner;
 
 public class CustomerDAOManager {
     private final CustomerDAO customerDAO;
+    private final Scanner scanner = new Scanner(System.in);
 
-    public CustomerDAOManager(Connection connection) {
-        this.customerDAO = new CustomerDAO(connection);
-    }
-
-    private void handleSQLException(Runnable action) {
-        try {
-            action.run();
-        } catch (SQLException e) {
-            System.out.println("Виникла помилка: " + e.getMessage());
-        }
-    }
-
-    public void addCustomer() {
-        Scanner scanner = new Scanner(System.in);
-        System.out.print("Введіть прізвище: ");
-        String surname = scanner.nextLine();
-        System.out.print("Введіть ім'я: ");
-        String name = scanner.nextLine();
-        System.out.print("Введіть по батькові: ");
-        String fathername = scanner.nextLine();
-        System.out.print("Введіть адресу: ");
-        String address = scanner.nextLine();
-        System.out.print("Введіть номер телефону: ");
-        long phoneNumber = scanner.nextLong();
-        System.out.print("Введіть номер картки: ");
-        long cardNumber = scanner.nextLong();
-        System.out.print("Введіть бонусний баланс: ");
-        double bonusBalance = scanner.nextDouble();
-
-        Customer customer = new Customer(0, surname, name, fathername, address, phoneNumber, cardNumber, bonusBalance);
-        handleSQLException(() -> {
-            customerDAO.insert(customer);
-            System.out.println("Покупця додано успішно.");
-        });
-    }
-
-    public void updateCustomer() {
-        Scanner scanner = new Scanner(System.in);
-        System.out.print("Введіть ID покупця для оновлення: ");
-        int id = scanner.nextInt();
-
-        System.out.print("Введіть нове прізвище: ");
-        String surname = scanner.next();
-        System.out.print("Введіть нове ім'я: ");
-        String name = scanner.next();
-        System.out.print("Введіть нове по батькові: ");
-        String fathername = scanner.next();
-        System.out.print("Введіть нову адресу: ");
-        String address = scanner.next();
-        System.out.print("Введіть новий номер телефону: ");
-        long phoneNumber = scanner.nextLong();
-        System.out.print("Введіть новий номер картки: ");
-        long cardNumber = scanner.nextLong();
-        System.out.print("Введіть новий бонусний баланс: ");
-        double bonusBalance = scanner.nextDouble();
-
-        Customer customer = new Customer(id, surname, name, fathername, address, phoneNumber, cardNumber, bonusBalance);
-        handleSQLException(() -> {
-            customerDAO.update(customer);
-            System.out.println("Покупця оновлено успішно.");
-        });
-    }
-
-    public void deleteCustomer() {
-        Scanner scanner = new Scanner(System.in);
-        System.out.print("Введіть ID покупця для видалення: ");
-        int id = scanner.nextInt();
-        handleSQLException(() -> {
-            customerDAO.deleteByID(id);
-            System.out.println("Покупця видалено успішно.");
-        });
-    }
-
-    public void findCustomerById() {
-        Scanner scanner = new Scanner(System.in);
-        System.out.print("Введіть ID покупця: ");
-        int id = scanner.nextInt();
-        handleSQLException(() -> {
-            Customer customer = customerDAO.findById(id);
-            if (customer != null) {
-                System.out.println(customer);
-            } else {
-                System.out.println("Покупця не знайдено.");
-            }
-        });
-    }
-
-    public void showCustomersByName() {
-        Scanner scanner = new Scanner(System.in);
-        System.out.print("Введіть ім'я: ");
-        String name = scanner.nextLine();
-        handleSQLException(() -> {
-            List<Customer> customers = customerDAO.selectByName(name);
-            customers.forEach(System.out::println);
-        });
-    }
-
-    public void showCustomersByCardNumberRange() {
-        Scanner scanner = new Scanner(System.in);
-        System.out.print("Введіть нижню межу номера картки: ");
-        long lowerBound = scanner.nextLong();
-        System.out.print("Введіть верхню межу номера картки: ");
-        long upperBound = scanner.nextLong();
-        handleSQLException(() -> {
-            List<Customer> customers = customerDAO.selectByCardNumberRange(lowerBound, upperBound);
-            customers.forEach(System.out::println);
-        });
-    }
-
-    public void showCustomersWithZeroBonusBalance() {
-        handleSQLException(() -> {
-            List<Customer> customers = customerDAO.selectByZeroBonusBalance();
-            customers.forEach(System.out::println);
-        });
+    public CustomerDAOManager(CustomerDAO customerDAO) {
+        this.customerDAO = customerDAO;
     }
 
     public void showAllCustomers() {
-        handleSQLException(() -> {
-            List<Customer> customers = customerDAO.select();
-            customers.forEach(System.out::println);
-        });
+        List<Customer> customers = customerDAO.getAllCustomers();
+        customers.forEach(System.out::println);
+    }
+
+    public void addCustomer() {
+        System.out.print("Enter ID: ");
+        int id = scanner.nextInt();
+        System.out.print("Enter Surname: ");
+        String surname = scanner.next();
+        System.out.print("Enter Name: ");
+        String name = scanner.next();
+        System.out.print("Enter Fathername: ");
+        String fathername = scanner.next();
+        System.out.print("Enter Address: ");
+        String address = scanner.next();
+        System.out.print("Enter Phone Number: ");
+        long phoneNumber = scanner.nextLong();
+        System.out.print("Enter Card Number: ");
+        long cardNumber = scanner.nextLong();
+        System.out.print("Enter Bonus Balance: ");
+        double bonusBalance = scanner.nextDouble();
+
+        Customer customer = new Customer(id, surname, name, fathername, address, phoneNumber, cardNumber, bonusBalance);
+        customerDAO.addCustomer(customer);
+        System.out.println("Customer added successfully.");
+    }
+
+    public void updateCustomer() {
+        System.out.print("Enter Customer ID to update: ");
+        int id = scanner.nextInt();
+        Customer customer = customerDAO.getCustomerById(id);
+
+        if (customer != null) {
+            System.out.print("Enter new Surname: ");
+            customer.setSurname(scanner.next());
+            System.out.print("Enter new Name: ");
+            customer.setName(scanner.next());
+            System.out.print("Enter new Fathername: ");
+            customer.setFathername(scanner.next());
+            System.out.print("Enter new Address: ");
+            customer.setAddress(scanner.next());
+            System.out.print("Enter new Phone Number: ");
+            customer.setPhoneNumber(scanner.nextLong());
+            System.out.print("Enter new Card Number: ");
+            customer.setCardNumber(scanner.nextLong());
+            System.out.print("Enter new Bonus Balance: ");
+            customer.setBonusBalance(scanner.nextDouble());
+
+            customerDAO.updateCustomer(customer);
+            System.out.println("Customer updated successfully.");
+        } else {
+            System.out.println("Customer not found.");
+        }
+    }
+
+    public void deleteCustomer() {
+        System.out.print("Enter Customer ID to delete: ");
+        int id = scanner.nextInt();
+        customerDAO.deleteCustomer(id);
+        System.out.println("Customer deleted successfully.");
+    }
+
+    public void findCustomerById() {
+        System.out.print("Enter Customer ID to find: ");
+        int id = scanner.nextInt();
+        Customer customer = customerDAO.getCustomerById(id);
+
+        if (customer != null) {
+            System.out.println(customer);
+        } else {
+            System.out.println("Customer not found.");
+        }
+    }
+
+    public void showCustomersByName() {
+        System.out.print("Enter Name to search for: ");
+        String name = scanner.next();
+        // Implement method in CustomerDAO to search by name and use it here
+    }
+
+    public void showCustomersByCardNumberRange() {
+        System.out.print("Enter Minimum Card Number: ");
+        long min = scanner.nextLong();
+        System.out.print("Enter Maximum Card Number: ");
+        long max = scanner.nextLong();
+        // Implement method in CustomerDAO to search by card number range and use it here
+    }
+
+    public void showCustomersWithZeroBonusBalance() {
+        // Implement method in CustomerDAO to find customers with zero bonus balance and use it here
     }
 }

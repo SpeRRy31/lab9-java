@@ -3,158 +3,113 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CustomerDAO {
-    private final Connection connection;
+    private final String url = "jdbc:postgresql://localhost:5432/postgress";
+    private final String user = "postgres";
+    private final String password = "1111";
 
-    public CustomerDAO(Connection connection) {
-        this.connection = connection;
+    public Connection connect() throws SQLException {
+        return DriverManager.getConnection(url, user, password);
     }
 
-    public int insert(Customer customer) throws SQLException {
-        String sql = "INSERT INTO customers (surname, name, fathername, address, phoneNumber, cardNumber, bonusBalance) VALUES (?, ?, ?, ?, ?, ?, ?)";
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setString(1, customer.getSurname());
-            statement.setString(2, customer.getName());
-            statement.setString(3, customer.getFathername());
-            statement.setString(4, customer.getAddress());
-            statement.setLong(5, customer.getPhoneNumber());
-            statement.setLong(6, customer.getCardNumber());
-            statement.setDouble(7, customer.getBonusBalance());
-            return statement.executeUpdate();
+    public void addCustomer(Customer customer) {
+        String sql = "INSERT INTO customers(id, surname, name, fathername, address, phone_number, card_number, bonus_balance) VALUES(?, ?, ?, ?, ?, ?, ?, ?)";
+
+        try (Connection conn = connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, customer.getId());
+            pstmt.setString(2, customer.getSurname());
+            pstmt.setString(3, customer.getName());
+            pstmt.setString(4, customer.getFathername());
+            pstmt.setString(5, customer.getAddress());
+            pstmt.setLong(6, customer.getPhoneNumber());
+            pstmt.setLong(7, customer.getCardNumber());
+            pstmt.setDouble(8, customer.getBonusBalance());
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
         }
     }
 
-    public List<Customer> select() throws SQLException {
+    public Customer getCustomerById(int id) {
+        String sql = "SELECT * FROM customers WHERE id = ?";
+        Customer customer = null;
+
+        try (Connection conn = connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, id);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                customer = new Customer(
+                        rs.getInt("id"),
+                        rs.getString("surname"),
+                        rs.getString("name"),
+                        rs.getString("fathername"),
+                        rs.getString("address"),
+                        rs.getLong("phone_number"),
+                        rs.getLong("card_number"),
+                        rs.getDouble("bonus_balance")
+                );
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return customer;
+    }
+
+    public List<Customer> getAllCustomers() {
         List<Customer> customers = new ArrayList<>();
         String sql = "SELECT * FROM customers";
-        try (Statement statement = connection.createStatement();
-             ResultSet resultSet = statement.executeQuery(sql)) {
-            while (resultSet.next()) {
+
+        try (Connection conn = connect();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
                 Customer customer = new Customer(
-                        resultSet.getInt("id"),
-                        resultSet.getString("surname"),
-                        resultSet.getString("name"),
-                        resultSet.getString("fathername"),
-                        resultSet.getString("address"),
-                        resultSet.getLong("phoneNumber"),
-                        resultSet.getLong("cardNumber"),
-                        resultSet.getDouble("bonusBalance")
+                        rs.getInt("id"),
+                        rs.getString("surname"),
+                        rs.getString("name"),
+                        rs.getString("fathername"),
+                        rs.getString("address"),
+                        rs.getLong("phone_number"),
+                        rs.getLong("card_number"),
+                        rs.getDouble("bonus_balance")
                 );
                 customers.add(customer);
             }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
         }
         return customers;
     }
 
-    public Customer findById(int id) throws SQLException {
-        String sql = "SELECT * FROM customers WHERE id = ?";
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setInt(1, id);
-            try (ResultSet resultSet = statement.executeQuery()) {
-                if (resultSet.next()) {
-                    return new Customer(
-                            resultSet.getInt("id"),
-                            resultSet.getString("surname"),
-                            resultSet.getString("name"),
-                            resultSet.getString("fathername"),
-                            resultSet.getString("address"),
-                            resultSet.getLong("phoneNumber"),
-                            resultSet.getLong("cardNumber"),
-                            resultSet.getDouble("bonusBalance")
-                    );
-                }
-            }
-        }
-        return null;
-    }
+    public void updateCustomer(Customer customer) {
+        String sql = "UPDATE customers SET surname = ?, name = ?, fathername = ?, address = ?, phone_number = ?, card_number = ?, bonus_balance = ? WHERE id = ?";
 
-    public int update(Customer customer) throws SQLException {
-        String sql = "UPDATE customers SET surname = ?, name = ?, fathername = ?, address = ?, phoneNumber = ?, cardNumber = ?, bonusBalance = ? WHERE id = ?";
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setString(1, customer.getSurname());
-            statement.setString(2, customer.getName());
-            statement.setString(3, customer.getFathername());
-            statement.setString(4, customer.getAddress());
-            statement.setLong(5, customer.getPhoneNumber());
-            statement.setLong(6, customer.getCardNumber());
-            statement.setDouble(7, customer.getBonusBalance());
-            statement.setInt(8, customer.getId());
-            return statement.executeUpdate();
+        try (Connection conn = connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, customer.getSurname());
+            pstmt.setString(2, customer.getName());
+            pstmt.setString(3, customer.getFathername());
+            pstmt.setString(4, customer.getAddress());
+            pstmt.setLong(5, customer.getPhoneNumber());
+            pstmt.setLong(6, customer.getCardNumber());
+            pstmt.setDouble(7, customer.getBonusBalance());
+            pstmt.setInt(8, customer.getId());
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
         }
     }
 
-    public int deleteByID(int id) throws SQLException {
+    public void deleteCustomer(int id) {
         String sql = "DELETE FROM customers WHERE id = ?";
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setInt(1, id);
-            return statement.executeUpdate();
-        }
-    }
 
-    public List<Customer> selectByName(String name) throws SQLException {
-        List<Customer> customers = new ArrayList<>();
-        String sql = "SELECT * FROM customers WHERE name = ?";
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setString(1, name);
-            try (ResultSet resultSet = statement.executeQuery()) {
-                while (resultSet.next()) {
-                    customers.add(new Customer(
-                            resultSet.getInt("id"),
-                            resultSet.getString("surname"),
-                            resultSet.getString("name"),
-                            resultSet.getString("fathername"),
-                            resultSet.getString("address"),
-                            resultSet.getLong("phoneNumber"),
-                            resultSet.getLong("cardNumber"),
-                            resultSet.getDouble("bonusBalance")
-                    ));
-                }
-            }
+        try (Connection conn = connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, id);
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
         }
-        return customers;
-    }
-
-    public List<Customer> selectByCardNumberRange(long lowerBound, long upperBound) throws SQLException {
-        List<Customer> customers = new ArrayList<>();
-        String sql = "SELECT * FROM customers WHERE cardNumber BETWEEN ? AND ?";
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setLong(1, lowerBound);
-            statement.setLong(2, upperBound);
-            try (ResultSet resultSet = statement.executeQuery()) {
-                while (resultSet.next()) {
-                    customers.add(new Customer(
-                            resultSet.getInt("id"),
-                            resultSet.getString("surname"),
-                            resultSet.getString("name"),
-                            resultSet.getString("fathername"),
-                            resultSet.getString("address"),
-                            resultSet.getLong("phoneNumber"),
-                            resultSet.getLong("cardNumber"),
-                            resultSet.getDouble("bonusBalance")
-                    ));
-                }
-            }
-        }
-        return customers;
-    }
-
-    public List<Customer> selectByZeroBonusBalance() throws SQLException {
-        List<Customer> customers = new ArrayList<>();
-        String sql = "SELECT * FROM customers WHERE bonusBalance = 0";
-        try (Statement statement = connection.createStatement();
-             ResultSet resultSet = statement.executeQuery(sql)) {
-            while (resultSet.next()) {
-                customers.add(new Customer(
-                        resultSet.getInt("id"),
-                        resultSet.getString("surname"),
-                        resultSet.getString("name"),
-                        resultSet.getString("fathername"),
-                        resultSet.getString("address"),
-                        resultSet.getLong("phoneNumber"),
-                        resultSet.getLong("cardNumber"),
-                        resultSet.getDouble("bonusBalance")
-                ));
-            }
-        }
-        return customers;
     }
 }

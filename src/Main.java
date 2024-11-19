@@ -6,7 +6,7 @@ import java.util.Scanner;
 public class Main {
     private static final String URL = "jdbc:postgresql://localhost:5432/postgress";
     private static final String USER = "postgres";
-    private static final String PASSWORD = "1234";
+    private static final String PASSWORD = "1111";
 
     public static void main(String[] args) {
         Main main = new Main();
@@ -14,8 +14,8 @@ public class Main {
     }
 
     public static void printMenu() {
-        System.out.println("Menu choose operation");
-        System.out.println("1  - Show all Customers");
+        System.out.println("Menu - Choose Operation:");
+        System.out.println("1  - Show All Customers");
         System.out.println("2  - Add Customer");
         System.out.println("3  - Update Customer");
         System.out.println("4  - Delete Customer");
@@ -24,7 +24,7 @@ public class Main {
         System.out.println("7  - Show Customers with Card Number in Range");
         System.out.println("8  - Show Customers with Zero Bonus Balance");
         System.out.println("9  - Exit");
-        System.out.printf("\n Input here --> ");
+        System.out.print("\nInput here --> ");
     }
 
     public static int menu() {
@@ -41,7 +41,8 @@ public class Main {
 
     public void run() {
         try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD)) {
-            CustomerDAOManager customerDAOManager = new CustomerDAOManager(connection);
+            CustomerDAO customerDAO = new CustomerDAO();
+            CustomerDAOManager customerDAOManager = new CustomerDAOManager(customerDAO);
 
             boolean close = false;
             while (!close) {
